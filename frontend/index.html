@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>YouTube Downloader</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<style>
+  /* Page background & theme */
+  body {
+    margin:0;
+    font-family: Arial, sans-serif;
+    background: url('https://www.solidbackgrounds.com/images/1920x1080/1920x1080-light-pastel-purple-solid-color-background.jpg') no-repeat center center fixed;
+    background-size: cover;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* Centered panel */
+  .panel {
+    max-width: 760px;
+    margin: 36px auto;
+    background: rgba(255,255,255,0.95);
+    border-radius: 12px;
+    padding: 22px;
+    box-shadow: 0 8px 28px rgba(43,21,75,0.12);
+    color: #3b1f4b;
+  }
+
+  h1 {
+    color:#6a2fb3;
+    font-weight:700;
+    text-align:center;
+    margin-bottom:12px;
+  }
+
+  /* Form controls */
+  .form-control, .form-select {
+    border-radius:10px;
+    border:1px solid rgba(106,45,179,0.12);
+    padding:10px 12px;
+    margin-bottom:10px;
+    color:#321b3e;
+  }
+
+  .btn-custom {
+    background: linear-gradient(180deg,#9b47b0,#7b2f94);
+    color:#fff;
+    border:none;
+    border-radius:10px;
+    padding:10px 14px;
+  }
+
+  .btn-custom:disabled {
+    opacity:0.6;
+    cursor:not-allowed;
+  }
+
+  #cancelBtn {
+    background: #e15252;
+    border-radius:10px;
+    color:white;
+    border:none;
+  }
+
+  /* Thumbnail & title */
+  #thumbnail {
+    width:100%;
+    max-height:220px;
+    object-fit:cover;
+    border-radius:8px;
+    display:none;
+    margin-bottom:10px;
+  }
+
+  #title {
+    font-weight:700;
+    margin-bottom:10px;
+    color:#4b1e6a;
+    min-height:1.4em;
+  }
+
+  /* Progress bar area */
+  .progress-wrapper {
+    margin-top:12px;
+  }
+
+  .progress {
+    height:36px;
+    background: linear-gradient(90deg,#f3e8ff,#fff);
+    border-radius:10px;
+    overflow:hidden;
+  }
+
+  #progress-bar {
+    width:0%;
+    height:100%;
+    line-height:36px;
+    text-align:center;
+    color:#fff;
+    font-weight:700;
+    border-radius:10px;
+    transition: width 0.32s ease;
+    background-size: 30px 30px, 100% 100%;
+    background-repeat: repeat, no-repeat;
+    animation: move-stripes 1s linear infinite;
+  }
+
+  @keyframes move-stripes {
+    0% { background-position: 0 0, 0 0; }
+    100% { background-position: 30px 0, 0 0; }
+  }
+
+  #info {
+    margin-top:10px;
+    font-size:14px;
+    color:#4b1e6a;
+    min-height:1.2em;
+  }
+
+  /* Instructions Section - Vertical & Centered */
+  .instructions {
+    margin-top: 40px;
+    text-align: center;
+    background-color: rgba(255,255,255,0.85);
+    padding: 20px;
+    border-radius: 12px;
+  }
+
+  .instructions h2 {
+    color: #4b0082;
+    margin-bottom: 25px;
+  }
+
+  .steps-vertical {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 25px;
+  }
+
+  .step {
+    max-width: 400px;
+    text-align: center;
+  }
+
+  .circle {
+    width: 68px; 
+    height: 68px; 
+    border-radius: 50%;
+    display: inline-flex; 
+    align-items: center; 
+    justify-content: center;
+    font-size: 28px; 
+    font-weight: 700; 
+    margin-bottom: 10px;
+  }
+
+  .s1 { background:#e8f0ff; color:#2c66e6; }
+  .s2 { background:#ffe8e8; color:#d94242; }
+  .s3 { background:#e8ffe9; color:#1f9a4e; }
+
+  .step p {
+    margin: 0;
+    color: #4b1e6a;
+    font-size: 15px;
+    line-height: 1.4;
+  }
+
+  @media (max-width: 768px) {
+    .instructions {
+      padding: 18px;
+    }
+    .step p {
+      font-size: 14px;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="panel">
+  <h1>YouTube Downloader</h1>
+  <img id="thumbnail" src="" alt="thumbnail">
+  <div id="title"></div>
+  <input id="url" class="form-control" placeholder="Enter YouTube URL or drag it here" />
+  <input id="customName" class="form-control" placeholder="Optional: enter custom filename (no extension)" />
+  <div class="d-flex gap-2">
+    <select id="format" class="form-select">
+      <option value="mp4">MP4 (video)</option>
+      <option value="mp3">MP3 (audio)</option>
+    </select>
+    <select id="quality" class="form-select">
+      <option value="best">Best</option>
+      <option value="1080">1080p</option>
+      <option value="720">720p</option>
+      <option value="480">480p</option>
+      <option value="360">360p</option>
+    </select>
+  </div>
+  <div class="d-flex gap-2 mt-2">
+    <button id="downloadBtn" class="btn btn-custom flex-fill" onclick="startDownload()">Download</button>
+    <button id="cancelBtn" class="btn flex-fill" style="display:none" onclick="cancelDownload()">Cancel</button>
+  </div>
+  <div class="progress-wrapper">
+    <div class="progress">
+      <div id="progress-bar">0%</div>
+    </div>
+    <div id="info"></div>
+  </div>
+
+  <!-- Vertical Instructions Section -->
+  <div class="instructions">
+    <h2>How to download YouTube videos online in 3 Simple Steps</h2>
+    <div class="steps-vertical">
+      <div class="step">
+        <div class="circle s1">1</div>
+        <p>Search the Keyword or Copy the link to the YouTube video and paste it into the input box.</p>
+      </div>
+      <div class="step">
+        <div class="circle s2">2</div>
+        <p>Select the MP4 or MP3 format you want and then press the Download button.</p>
+      </div>
+      <div class="step">
+        <div class="circle s3">3</div>
+        <p>Wait a Few Moments for the complete conversion and Download. It's an Easy, simple, and Fast process.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* Backend base URL */
+const API = 'http://127.0.0.1:5000'; // change if backend runs on different host/port
+
+/* Elements */
+const urlInput = document.getElementById('url');
+const customNameInput = document.getElementById('customName');
+const formatSelect = document.getElementById('format');
+const qualitySelect = document.getElementById('quality');
+const downloadBtn = document.getElementById('downloadBtn');
+const cancelBtn = document.getElementById('cancelBtn');
+const progressBar = document.getElementById('progress-bar');
+const infoDiv = document.getElementById('info');
+const titleDiv = document.getElementById('title');
+const thumbnail = document.getElementById('thumbnail');
+
+let currentID = null;
+let evtSource = null;
+
+/* Hide quality for mp3 */
+formatSelect.addEventListener('change', () => {
+  qualitySelect.style.display = formatSelect.value === 'mp3' ? 'none' : 'block';
+});
+
+/* Drag and drop URL support */
+urlInput.addEventListener('dragover', e => { e.preventDefault(); urlInput.style.border = '2px dashed rgba(106,47,160,0.6)'; });
+urlInput.addEventListener('dragleave', e => { e.preventDefault(); urlInput.style.border = ''; });
+urlInput.addEventListener('drop', e => {
+  e.preventDefault(); urlInput.style.border = '';
+  const text = e.dataTransfer.getData('text');
+  if (!text) return;
+  if (text.includes('youtube.com') || text.includes('youtu.be')) urlInput.value = text.trim();
+  else alert('Dropped content is not a YouTube URL');
+});
+
+/* Utilities */
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+function sanitizeFilename(name){ if(!name) return ''; return name.replace(/[\\\/:*?"<>|]/g, '').trim(); }
+function formatBytes(bytes){ if(!bytes || bytes === 0) return '0 B'; const k = 1024; const sizes = ['B','KB','MB','GB','TB']; const i = Math.floor(Math.log(bytes)/Math.log(k)); return (bytes / Math.pow(k,i)).toFixed(2) + ' ' + sizes[i]; }
+function formatSpeed(speed){ if(!speed) return '-'; return formatBytes(speed) + '/s'; }
+function formatETA(eta){ if(!eta && eta !== 0) return '--:--'; const m = Math.floor(eta/60); const s = Math.floor(eta % 60); return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`; }
+
+/* gradient/stripe builder */
+function gradientForPercent(percent){
+  let r,g;
+  if(percent <= 50){ r = 255; g = Math.floor(165 * (percent/50)); } 
+  else { r = Math.floor(255 - (255 * ((percent-50)/50))); g = 165 + Math.floor(90 * ((percent-50)/50)); }
+  const colorA = `rgb(${r},${g},0)`;
+  const colorB = `rgb(${Math.max(r-40,0)},${Math.max(g-40,0)},0)`;
+  return `repeating-linear-gradient(45deg, rgba(255,255,255,0.18) 0, rgba(255,255,255,0.18) 12px, rgba(0,0,0,0.06) 12px, rgba(0,0,0,0.06) 24px), linear-gradient(90deg, ${colorA}, ${colorB})`;
+}
+
+/* start download */
+async function startDownload(){
+  const url = urlInput.value && urlInput.value.trim();
+  if(!url){ alert('Please enter a YouTube URL'); return; }
+  downloadBtn.disabled = true; downloadBtn.innerText = 'Starting...';
+  progressBar.style.width = '0%'; progressBar.innerText = '0%'; infoDiv.innerText = '';
+  const format = formatSelect.value; const quality = qualitySelect.value;
+  const customRaw = sanitizeFilename(customNameInput.value || '');
+  currentID = null;
+
+  let res;
+  try {
+    res = await fetch(`${API}/download`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({url, format, quality}) });
+  } catch (err) { alert('Failed to contact server: ' + err.message); resetUI(); return; }
+  if(!res.ok){ const j = await res.json().catch(()=>({error: 'Unknown'})); alert('Server error: ' + (j.error || res.statusText)); resetUI(); return; }
+
+  const data = await res.json();
+  currentID = data.id;
+  const title = data.title || 'download';
+  const thumbnailUrl = data.thumbnail || '';
+  const filenameBase = customRaw || title || 'download';
+  titleDiv.innerText = title;
+  if(thumbnailUrl){ thumbnail.src = thumbnailUrl; thumbnail.style.display = 'block'; } else { thumbnail.style.display = 'none'; }
+  cancelBtn.style.display = 'inline-block'; downloadBtn.innerText = 'Downloading...';
+
+  if(evtSource){ try{ evtSource.close(); }catch{} evtSource = null; }
+  evtSource = new EventSource(`${API}/progress/${currentID}`);
+  evtSource.onmessage = (e) => {
+    const parts = (e.data || '').split('|');
+    const percent = Number(parts[0]) || 0;
+    const speed = Number(parts[1]) || 0;
+    const eta = Number(parts[2]) || 0;
+    const downloaded = Number(parts[3]) || 0;
+    const total = Number(parts[4]) || 0;
+
+    progressBar.style.width = percent + '%';
+    progressBar.style.background = gradientForPercent(percent);
+    progressBar.innerText = percent + '%';
+    infoDiv.innerText = `${formatBytes(downloaded)} / ${formatBytes(total)} • ${formatSpeed(speed)} • ETA: ${formatETA(eta)}`;
+
+    if(percent >= 100 || percent === -1){ try{ evtSource.close(); } catch(e){} evtSource = null; downloadBtn.disabled = false; downloadBtn.innerText = 'Download'; }
+  };
+  evtSource.onerror = (err) => { console.warn('SSE error', err); };
+
+  (async function pollFile(){
+    while(true){
+      try{
+        const f = await fetch(`${API}/file/${currentID}`);
+        if(f.ok){
+          const blob = await f.blob();
+          const ext = format === 'mp3' ? 'mp3' : 'mp4';
+          const a = document.createElement('a');
+          const urlObj = window.URL.createObjectURL(blob);
+          a.href = urlObj;
+          a.download = `${filenameBase}.${ext}`;
+          document.body.appendChild(a); a.click(); a.remove();
+          window.URL.revokeObjectURL(urlObj);
+          resetUI(); notifyUser(`${filenameBase}.${ext}`); break;
+        } else { await sleep(600); }
+      } catch (err){ await sleep(700); }
+    }
+  })();
+}
+
+/* Cancel download */
+async function cancelDownload(){
+  if(!currentID){ resetUI(); return; }
+  try { await fetch(`${API}/cancel/${currentID}`, { method: 'POST' }); } catch(e){}
+  if(evtSource){ try{ evtSource.close(); } catch(e){} evtSource = null; }
+  infoDiv.innerText = 'Download cancelled';
+  progressBar.style.width = '0%'; progressBar.innerText = '0%'; progressBar.style.background = '';
+  titleDiv.innerText = ''; thumbnail.style.display = 'none';
+  downloadBtn.disabled = false; downloadBtn.innerText = 'Download'; cancelBtn.style.display = 'none'; currentID = null;
+}
+
+/* reset UI helper */
+function resetUI(){
+  downloadBtn.disabled = false; downloadBtn.innerText = 'Download'; cancelBtn.style.display = 'none';
+  progressBar.style.width = '0%'; progressBar.innerText = '0%'; progressBar.style.background = '';
+  infoDiv.innerText = ''; titleDiv.innerText = ''; thumbnail.style.display = 'none';
+  customNameInput.value = '';
+  if(evtSource){ try{ evtSource.close(); } catch(e){} evtSource = null; }
+  currentID = null;
+}
+
+/* Browser notification */
+function notifyUser(body){
+  try {
+    if(Notification.permission === 'granted') { new Notification('Download Complete', { body }); } 
+    else if(Notification.permission !== 'denied') {
+      Notification.requestPermission().then(p => { if(p === 'granted') new Notification('Download Complete', { body }); });
+    }
+  } catch (e) {}
+}
+</script>
+</body>
+</html>
