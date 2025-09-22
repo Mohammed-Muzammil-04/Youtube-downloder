@@ -1,3 +1,4 @@
-flask
-flask-cors
-yt-dlp
+Flask==2.3.3
+flask-cors==3.1.0
+yt-dlp==2025.9.22
+pytube==15.0.0
