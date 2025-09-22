@@ -55,6 +55,17 @@ def get_file(file_id):
         return "File not found", 404
     return send_file(filepath, as_attachment=True)
 
+
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+# Add your download routes here...
+# Example placeholder
+@app.route("/download", methods=["POST"])
+def download():
+    return "Download logic goes here"
+
 # Ensure download folder exists
 if not os.path.exists("downloads"):
     os.makedirs("downloads")
@@ -63,5 +74,5 @@ if not os.path.exists("downloads"):
 if __name__ == "__main__":
     import os
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+    app.run(host="0.0.0.0", port=port, debug=False, use_reloader=False)
 
