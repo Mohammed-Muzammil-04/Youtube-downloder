@@ -5,6 +5,9 @@ import uuid
 import yt_dlp
 import threading
 import time
+from flask import render_template
+
+
 
 app = Flask(__name__)
 CORS(app)
@@ -126,6 +129,10 @@ def update_progress(d, file_id):
         eta = d.get('eta',0)
         percent = int(downloaded/total_bytes*100) if total_bytes else 0
         progress_dict[file_id].update({'percent':percent,'speed':speed,'eta':eta,'downloaded':downloaded,'total':total_bytes})
+
+@app.route("/")
+def home():
+    return render_template("index.html")
 
 if __name__ == "__main__":
     # Use the PORT environment variable Render provides, fallback to 5000 locally
