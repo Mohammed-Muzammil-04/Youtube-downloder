@@ -9,21 +9,16 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
 
     status.innerText = 'Downloading...';
 
-    fetch('http://127.0.0.1:5000/download', {
+    // Use relative path
+    fetch('/download', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url })
     })
-    .then(response => {
-        if (!response.ok) throw new Error('Download failed!');
-        return response.blob();
-    })
-    .then(blob => {
-        const link = document.createElement('a');
-        link.href = window.URL.createObjectURL(blob);
-        link.download = 'video.mp4';
-        link.click();
-        status.innerText = 'Download complete!';
+    .then(response => response.json())  // your backend returns JSON
+    .then(data => {
+        status.innerText = 'Download started for: ' + data.title;
+        // You can implement download progress / file fetching separately
     })
     .catch(err => {
         status.innerText = err.message;
