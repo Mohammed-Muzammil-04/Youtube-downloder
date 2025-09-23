@@ -127,5 +127,11 @@ def update_progress(d, file_id):
         percent = int(downloaded/total_bytes*100) if total_bytes else 0
         progress_dict[file_id].update({'percent':percent,'speed':speed,'eta':eta,'downloaded':downloaded,'total':total_bytes})
 
-if __name__=='__main__':
-    app.run(debug=True)
+if __name__ == "__main__":
+    # Use the PORT environment variable Render provides, fallback to 5000 locally
+    port = int(os.environ.get("PORT", 5000))
+
+    # Ensure debug is off on Render (do not enable the reloader)
+    # Host must be 0.0.0.0 so Render can bind the container.
+    app.run(host="0.0.0.0", port=port, debug=False)
+
