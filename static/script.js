@@ -10,11 +10,16 @@ document.getElementById('downloadBtn').addEventListener('click', () => {
     status.innerText = 'Downloading...';
 
     // Use relative path
-    fetch('/download', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url })
-    })
+    fetch("/download", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ url })
+    });
+
+    fetch("/progress/" + file_id)
+    fetch("/file/" + file_id)
+    fetch("/cancel/" + file_id, { method: "POST" })
+
     .then(response => response.json())  // your backend returns JSON
     .then(data => {
         status.innerText = 'Download started for: ' + data.title;

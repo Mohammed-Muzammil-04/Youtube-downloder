@@ -1,26 +1,19 @@
-from flask import Flask, request, send_file, after_this_request, jsonify, Response, stream_with_context
+from flask import Flask, request, send_file, after_this_request, jsonify, Response, stream_with_context, render_template
 from flask_cors import CORS
-import os
-import uuid
-import yt_dlp
-import threading
-import time
-from flask import render_template
-
-
+import os, uuid, threading, time, yt_dlp
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS
-
-@app.route("/")
-def home():
-    return render_template("index.html")
+CORS(app)
 
 DOWNLOAD_FOLDER = os.path.join(os.getcwd(), "downloads")
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
 
 progress_dict = {}
 cancel_flags = {}
+
+@app.route("/")
+def home():
+    return render_template("index.html")
 
 @app.route('/download', methods=['POST'])
 def download_video():
@@ -36,7 +29,7 @@ def download_video():
     progress_dict[file_id] = {'percent':0,'speed':0,'eta':0,'downloaded':0,'total':0,'filename':None,'error':None,'title':'', 'thumbnail':''}
     cancel_flags[file_id] = False
 
-    # get info first to fetch title and thumbnail
+    # Fetch title & thumbnail
     try:
         with yt_dlp.YoutubeDL({'quiet':True}) as ydl:
             info = ydl.extract_info(url, download=False)
@@ -55,10 +48,7 @@ def download_video():
         }
     else:
         filename = os.path.join(DOWNLOAD_FOLDER, f"{file_id}.mp4")
-        if quality != 'best':
-            ydl_format = f'bestvideo[height<={quality}][vcodec^=avc]+bestaudio[acodec^=mp4a]/best[ext=mp4]'
-        else:
-            ydl_format = 'bestvideo[vcodec^=avc]+bestaudio[acodec^=mp4a]/best[ext=mp4]'
+        ydl_format = 'bestvideo[height<={quality}]+bestaudio/best' if quality != 'best' else 'bestvideo+bestaudio/best'
         ydl_opts = {
             'format': ydl_format,
             'outtmpl': filename,
@@ -74,11 +64,7 @@ def download_video():
                 if cancel_flags[file_id]:
                     progress_dict[file_id]['error'] = 'Download cancelled'
                     return
-                if format_type=='mp3':
-                    filename_local = os.path.join(DOWNLOAD_FOLDER,file_id+'.mp3')
-                else:
-                    filename_local = os.path.join(DOWNLOAD_FOLDER,f"{file_id}.mp4")
-                progress_dict[file_id]['filename'] = filename_local
+                progress_dict[file_id]['filename'] = filename if format_type=='mp4' else base_filename+'.mp3'
                 progress_dict[file_id]['percent'] = 100
         except Exception as e:
             progress_dict[file_id]['error'] = str(e)
@@ -134,13 +120,6 @@ def update_progress(d, file_id):
         percent = int(downloaded/total_bytes*100) if total_bytes else 0
         progress_dict[file_id].update({'percent':percent,'speed':speed,'eta':eta,'downloaded':downloaded,'total':total_bytes})
 
-
-
 if __name__ == "__main__":
-    # Use the PORT environment variable Render provides, fallback to 5000 locally
     port = int(os.environ.get("PORT", 5000))
-
-    # Ensure debug is off on Render (do not enable the reloader)
-    # Host must be 0.0.0.0 so Render can bind the container.
     app.run(host="0.0.0.0", port=port, debug=False)
-
