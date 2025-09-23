@@ -3,3 +3,5 @@ flask-cors
 yt-dlp
 pytube
 gunicorn==20.1.0
+imageio[ffmpeg]
+ffmpeg-python
